@@ -5,6 +5,8 @@ import { useSelector } from 'react-redux';
 import { useActions } from '../../hooks/useActions';
 
 const List = () => {
+    // the name "councillors" (as in councillorsData, councillorsFilteredData) is misleading, it's a variable intended to be used for councillors, councils and affairs
+    // didn't have time to modify it
     const councillors = useSelector(state => state.councillors);
 
     const [councillorsData, setCouncillorsData] = useState(null);
@@ -25,6 +27,7 @@ const List = () => {
     }, [fetchData]);
 
     // ***** LOADING *****
+
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
     useEffect(() => {
@@ -64,7 +67,7 @@ const List = () => {
         setCouncillorsFilteredData(councillors.filteredData);
     }, [councillors.filteredData]);
 
-    // ***** FILTER *****
+    // ***** FILTER (SEARCH) *****
 
     const [searchValue, setSearchValue] = useState('');
 
@@ -85,6 +88,7 @@ const List = () => {
     // ***** SWITCH BETWEEN TABLES *****
 
     const [table, setTable] = useState('councillors');
+
     const tables = ['councillors', 'councils', 'affairs'];
     const filters = [['First Name', 'Last Name', 'Id'], ['Name'], ['Date']];
 
