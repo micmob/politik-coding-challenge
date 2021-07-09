@@ -5,4 +5,19 @@
 
 .list-item {
     width: 150px;
+    padding: 5px;
+}
+
+.list-tables {
+    padding-bottom: 20px;
+}
+
+.list-button {
+    margin-right: 10px;
+    margin-bottom: 20px;
+}
+
+.list-filters {
+    display: flex;
+    flex-direction: row;
 }

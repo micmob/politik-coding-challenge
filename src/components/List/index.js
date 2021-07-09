@@ -12,7 +12,7 @@ const List = () => {
         useState(null);
 
     const {
-        fetchCouncillors,
+        fetchData,
         sortCoincillors,
         filterCoincillors,
         resetFiltersCoincillors,
@@ -21,8 +21,8 @@ const List = () => {
     // ***** FETCH *****
 
     useEffect(() => {
-        fetchCouncillors();
-    }, [fetchCouncillors]);
+        fetchData('councillors');
+    }, [fetchData]);
 
     // ***** LOADING *****
     const [isLoading, setIsLoading] = useState(true);
@@ -51,17 +51,10 @@ const List = () => {
         }
     }, [councillors.error, councillors.data, councillors.filteredData]);
 
-    useEffect(() => {
-        if (councillorsData) {
-            console.log(councillorsData.length);
-        }
-    }, [councillorsData]);
-
     // ***** SORT *****
     const [sortField, setSortField] = useState(null);
 
     const handleSort = field => {
-        console.log(sortField, field);
         if (sortField !== field) {
             sortCoincillors(field);
         }
@@ -77,7 +70,7 @@ const List = () => {
 
     const handleSubmit = event => {
         event.preventDefault();
-        filterCoincillors(searchValue);
+        filterCoincillors(searchValue.toLowerCase());
     };
 
     const handleSearchChange = event => {
@@ -89,52 +82,78 @@ const List = () => {
         setSearchValue('');
     };
 
+    // ***** SWITCH BETWEEN TABLES *****
+
+    const [table, setTable] = useState('councillors');
+    const tables = ['councillors', 'councils', 'affairs'];
+    const filters = [['First Name', 'Last Name', 'Id'], ['Name'], ['Date']];
+
+    const showData = updatedTable => {
+        fetchData(updatedTable);
+        setTable(updatedTable);
+    };
+
     return (
         <div>
             {hasError ? (
-                <div>Oops, something went wrong.</div>
+                <div>Oops, something went wrong: {councillors.error}</div>
             ) : isLoading ? (
                 <div>Loading...</div>
             ) : (
                 <>
-                    <button onClick={() => handleSort('First Name')}>
-                        {sortField === 'First Name'
-                            ? 'Reset sort'
-                            : 'Sort by first name'}
-                    </button>
-                    <button onClick={() => handleSort('Last Name')}>
-                        {sortField === 'Last Name'
-                            ? 'Reset sort'
-                            : 'Sort by last name'}
-                    </button>
-                    <button onClick={() => handleSort('Id')}>
-                        {sortField === 'Id Name' ? 'Reset sort' : 'Sort by id'}
-                    </button>
-                    <form onSubmit={handleSubmit}>
-                        <label>
-                            Id or name:
+                    <div className="list-tables">
+                        {tables.map(table => (
+                            <button
+                                onClick={() => showData(table)}
+                                className="list-button"
+                            >
+                                {'Show ' + table}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="list-filters">
+                        {filters[tables.findIndex(elem => elem === table)].map(
+                            elem => (
+                                <button
+                                    onClick={() => handleSort(elem)}
+                                    className="list-button"
+                                >
+                                    {elem}
+                                </button>
+                            )
+                        )}
+
+                        <form onSubmit={handleSubmit}>
+                            <label>
+                                Search:
+                                <input
+                                    type="text"
+                                    value={searchValue}
+                                    onChange={handleSearchChange}
+                                />
+                            </label>
                             <input
-                                type="text"
-                                value={searchValue}
-                                onChange={handleSearchChange}
+                                type="submit"
+                                value="Search"
+                                className="list-button"
                             />
-                        </label>
-                        <input type="submit" value="Search" />
-                    </form>
-                    <button onClick={handleResetFilters}>Reset</button>
+                        </form>
+                        <button
+                            onClick={handleResetFilters}
+                            className="list-button"
+                        >
+                            Reset Filters
+                        </button>
+                    </div>
+
                     {councillorsFilteredData &&
                         councillorsFilteredData.map(data => (
                             <div className="list">
-                                <div className="list-item">{data['Id']}</div>
-                                <div className="list-item">
-                                    {data['Number']}
-                                </div>
-                                <div className="list-item">
-                                    {data['First Name']}
-                                </div>
-                                <div className="list-item">
-                                    {data['Last Name']}
-                                </div>
+                                {Object.keys(data).map(value => (
+                                    <div className="list-item">
+                                        {data[value]}
+                                    </div>
+                                ))}
                             </div>
                         ))}
                 </>

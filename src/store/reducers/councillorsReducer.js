@@ -64,9 +64,23 @@ const reducer = produce((state = initialState, action) => {
 
             filteredEntries = filteredEntries.filter(
                 data =>
-                    data['First Name'].toLowerCase().includes(action.keyword) ||
-                    data['Last Name'].toLowerCase().includes(action.keyword) ||
-                    data['Id'].toString().includes(action.keyword.toString())
+                    (data['First Name'] &&
+                        data['First Name']
+                            .toLowerCase()
+                            .includes(action.keyword)) ||
+                    (data['Last Name'] &&
+                        data['Last Name']
+                            .toLowerCase()
+                            .includes(action.keyword)) ||
+                    (data['Id'] &&
+                        data['Id']
+                            .toString()
+                            .includes(action.keyword.toString())) ||
+                    (data['Name'] &&
+                        data['Name']
+                            .toString()
+                            .toLowerCase()
+                            .includes(action.keyword.toString()))
             );
 
             state.filteredData = filteredEntries;

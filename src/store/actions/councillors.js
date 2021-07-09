@@ -16,14 +16,12 @@ const getDoc = async url => {
 };
 
 // gets the data from the html table for a given page
-const getData = async (i, categories) => {
+const getData = async (i, categories, tableName) => {
     try {
         const doc = await getDoc(
-            `https://guarded-beyond-25903.herokuapp.com/http://ws-old.parlament.ch/councillors?pageNumber=${i}`
+            `https://guarded-beyond-25903.herokuapp.com/http://ws-old.parlament.ch/${tableName}?pageNumber=${i}`
         );
-        const table = doc
-            .getElementById('main')
-            .getElementsByTagName('table')[1];
+        const table = getTable(doc);
 
         const data = [];
 
@@ -42,14 +40,24 @@ const getData = async (i, categories) => {
 
         // first elem is the header so remove it
         data.shift();
-
         return data;
     } catch (err) {
         throw err;
     }
 };
 
-export const fetchCouncillors = () => {
+const getTable = doc => {
+    let table;
+    for (let elem of doc.getElementById('main').children) {
+        if (elem.tagName === 'TABLE') {
+            table = elem;
+            break;
+        }
+    }
+    return table;
+};
+
+export const fetchData = tableName => {
     return async dispatch => {
         dispatch({
             type: ActionTypes.FETCH_COUNCILLORS,
@@ -58,14 +66,39 @@ export const fetchCouncillors = () => {
         try {
             // Access to fetch at 'http://ws-old.parlament.ch/councillors' from origin 'http://localhost:3000' has been blocked by CORS policy
             const doc = await getDoc(
-                'https://guarded-beyond-25903.herokuapp.com/http://ws-old.parlament.ch/councillors'
+                `https://guarded-beyond-25903.herokuapp.com/http://ws-old.parlament.ch/${tableName}`
             );
-            const table = doc
-                .getElementById('main')
-                .getElementsByTagName('table')[1];
-            const lastPage = doc
-                .getElementsByClassName('paging')[0]
-                .getElementsByTagName('a')[1];
+
+            // getting the element with the tag table that is inside id main
+            const table = getTable(doc);
+
+            // ***** find the last page number *****
+            let lastPage = null;
+            if (
+                doc.getElementsByClassName('paging').length > 0 &&
+                doc
+                    .getElementsByClassName('paging')[0]
+                    .getElementsByTagName('a').length > 0
+            ) {
+                lastPage = doc
+                    .getElementsByClassName('paging')[0]
+                    .getElementsByTagName('a')[1];
+            }
+
+            let lastPageNumber;
+            if (lastPage) {
+                const lastIndex = lastPage.href.toString().lastIndexOf('=');
+                lastPageNumber = parseInt(
+                    lastPage.toString().substring(lastIndex + 1)
+                );
+            } else {
+                // only one page
+                lastPageNumber = 1;
+            }
+
+            if (lastPageNumber > 100) {
+                lastPageNumber = 100;
+            }
 
             // ***** categories *****
             const categories = [];
@@ -76,22 +109,13 @@ export const fetchCouncillors = () => {
                 }
             }
 
-            // ***** find the last page number *****
-            let lastIndex = lastPage.href.toString().lastIndexOf('=');
             const allData = [];
-            // only one page
-            if (lastIndex < -1) {
-                lastIndex = 1;
-            }
-            const lastPageNumber = parseInt(
-                lastPage.toString().substring(lastIndex + 1)
-            );
 
             // ***** fetching data from each page *****
             const requests = [];
             for (let i = 1; i <= lastPageNumber; i++) {
                 try {
-                    requests.push(getData(i, categories));
+                    requests.push(getData(i, categories, tableName));
                 } catch (err) {
                     throw err;
                 }
